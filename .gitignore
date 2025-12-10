@@ -25,4 +25,3 @@ logs
 .dev.vars
 .wrangler
 .gemini
-package-lock.json
