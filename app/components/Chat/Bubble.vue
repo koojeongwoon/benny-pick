@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { marked } from 'marked';
+
 const props = defineProps<{
   role: 'user' | 'assistant';
   text?: string;
@@ -7,6 +9,20 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits(['action']);
+
+// 마크다운 렌더링 (assistant만)
+const renderedText = computed(() => {
+  if (!props.text) return '';
+  if (props.role === 'user') return props.text;
+
+  // marked 옵션 설정
+  marked.setOptions({
+    breaks: true, // 줄바꿈을 <br>로 변환
+    gfm: true,    // GitHub Flavored Markdown
+  });
+
+  return marked.parse(props.text);
+});
 
 const handleActionClick = () => {
   if (props.actionLink) {
@@ -39,7 +55,13 @@ const handleActionClick = () => {
           : 'bg-white text-gray-800 rounded-tl-none border border-gray-100',
       ]"
     >
-      <p class="whitespace-pre-wrap leading-relaxed">{{ text }}</p>
+      <!-- User: 일반 텍스트, Assistant: 마크다운 렌더링 -->
+      <p v-if="role === 'user'" class="whitespace-pre-wrap leading-relaxed">{{ text }}</p>
+      <div
+        v-else
+        class="prose prose-sm max-w-none prose-headings:text-gray-800 prose-headings:font-bold prose-h3:text-base prose-h3:mt-4 prose-h3:mb-2 prose-p:my-1 prose-ul:my-2 prose-li:my-0 prose-strong:text-primary"
+        v-html="renderedText"
+      ></div>
       
       <!-- Action Button (if present) -->
       <div v-if="props.actionLabel" class="mt-3 pt-3 border-t border-gray-100/20">

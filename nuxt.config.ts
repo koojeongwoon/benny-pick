@@ -7,9 +7,10 @@ export default defineNuxtConfig({
   css: ["~/assets/css/main.css"],
 
   // 👇 [추가됨] Cloudflare Pages 배포를 위한 핵심 설정입니다.
-  nitro: {
-    preset: "cloudflare-pages",
-  },
+  // 로컬 개발 시에는 주석 처리, 배포 시 활성화
+  // nitro: {
+  //   preset: "cloudflare-pages",
+  // },
 
   runtimeConfig: {
     // ⚠️ 수정 제안: import.meta.env 대신 process.env를 쓰거나 빈 값으로 두는 게 안전합니다.

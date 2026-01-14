@@ -1,9 +1,25 @@
 <script setup lang="ts">
+// 백엔드 API 응답 타입
+interface PolicySource {
+  id: string;
+  title: string;
+  score: number;
+  description: string;
+  benefit_summary: string;
+  category: string;
+  region: string;
+  apply_url: string;
+  ministry: string;
+  phone: string;
+}
+
 interface Message {
   id: string;
   role: 'user' | 'assistant';
   text: string;
-  type?: 'text' | 'card'; // Future proofing for cards
+  type?: 'text' | 'action';
+  actionLabel?: string;
+  actionLink?: string;
 }
 
 const router = useRouter();
@@ -36,62 +52,121 @@ const sendMessage = async (text: string) => {
     role: 'user',
     text: text,
   });
-  
+
   userInput.value = '';
   await scrollToBottom();
 
-  // Call Real API
+  // SSE 스트리밍 호출
   isTyping.value = true;
   await scrollToBottom();
 
+  // 스트리밍 응답을 위한 assistant 메시지 미리 추가
+  const assistantMsgId = (Date.now() + 1).toString();
+  messages.value.push({
+    id: assistantMsgId,
+    role: 'assistant',
+    text: '',
+  });
+
+  let policies: PolicySource[] = [];
+
   try {
-    const { data, error } = await useFetch('/api/chat', {
+    const response = await fetch('http://localhost:8000/chat/stream', {
       method: 'POST',
-      body: {
-        messages: messages.value.map(m => ({ role: m.role, text: m.text }))
-      }
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        query: text,
+        top_k: 5,
+      }),
     });
 
-    if (error.value) {
+    if (!response.ok) {
       throw new Error('API Error');
     }
 
-    const response = data.value as any;
+    const reader = response.body?.getReader();
+    const decoder = new TextDecoder();
+
+    if (!reader) {
+      throw new Error('No reader available');
+    }
 
     isTyping.value = false;
-    messages.value.push({
-      id: (Date.now() + 1).toString(),
-      role: 'assistant',
-      text: response.reply,
-    });
-    
-    // Save data to store
-    if (response.policies && response.policies.length > 0) {
-      setPolicyData(response.policies, response.intent);
-      
-      // Add a "System" message with a button (simulated as assistant message for now, or a new type)
-      // For MVP, let's append a special message or just a button in the chat stream?
-      // Let's use a cleaner approach: Append a message that triggers a UI element.
-      // Actually, let's just add a "View Results" action bubble.
+    let buffer = '';
+    let currentEvent = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || ''; // 마지막 불완전한 라인은 버퍼에 유지
+
+      for (const line of lines) {
+        const trimmedLine = line.trim();
+        if (!trimmedLine) continue;
+
+        // event: 타입 파싱
+        if (trimmedLine.startsWith('event:')) {
+          currentEvent = trimmedLine.slice(6).trim();
+          continue;
+        }
+
+        // data: 내용 파싱
+        if (trimmedLine.startsWith('data:')) {
+          const data = trimmedLine.slice(5).trim();
+
+          try {
+            if (currentEvent === 'sources') {
+              // sources 이벤트: 정책 배열
+              policies = JSON.parse(data);
+            } else if (currentEvent === 'answer') {
+              // answer 이벤트: {"text": "..."} 형태
+              const parsed = JSON.parse(data);
+              if (parsed.text !== undefined) {
+                const assistantMsg = messages.value.find(m => m.id === assistantMsgId);
+                if (assistantMsg) {
+                  assistantMsg.text += parsed.text;
+                }
+              }
+            } else if (currentEvent === 'done') {
+              // 스트리밍 완료
+              break;
+            }
+          } catch {
+            // JSON 파싱 실패 시 무시
+          }
+        }
+      }
+      await scrollToBottom();
+    }
+
+    // 정책이 있으면 store에 저장하고 액션 버튼 추가
+    if (policies.length > 0) {
+      setPolicyData(policies, {});
+
       messages.value.push({
         id: (Date.now() + 2).toString(),
         role: 'assistant',
         text: '상세한 혜택 정보를 리포트로 정리해두었어요.',
-        type: 'action', // Custom type for action button
+        type: 'action',
         actionLabel: '결과 리포트 보기',
-        actionLink: '/result'
-      } as any);
+        actionLink: '/result',
+      });
     }
-    
+
   } catch (e) {
     isTyping.value = false;
-    messages.value.push({
-      id: (Date.now() + 1).toString(),
-      role: 'assistant',
-      text: '죄송합니다. 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
-    });
+    // 빈 메시지였으면 에러 메시지로 교체
+    const assistantMsg = messages.value.find(m => m.id === assistantMsgId);
+    if (assistantMsg && !assistantMsg.text) {
+      assistantMsg.text = '죄송합니다. 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+    }
   }
-  
+
   await scrollToBottom();
 };
 

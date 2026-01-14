@@ -10,7 +10,7 @@ defineProps<{
 </script>
 
 <template>
-  <div class="relative flex flex-col w-full p-6 bg-white border border-gray-100 shadow-card rounded-3xl min-w-[280px] snap-center">
+  <div class="relative flex flex-col flex-shrink-0 w-[280px] p-6 bg-white border border-gray-100 shadow-card rounded-3xl snap-center">
     <!-- Icon & Tags -->
     <div class="flex items-start justify-between mb-4">
       <div class="flex items-center justify-center w-12 h-12 text-2xl bg-gray-50 rounded-2xl">
