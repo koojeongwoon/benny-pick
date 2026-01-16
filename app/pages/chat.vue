@@ -22,6 +22,16 @@ interface Message {
   actionLink?: string;
 }
 
+// 사용자 프로필 (대화에서 수집된 정보)
+interface UserProfile {
+  age?: number;
+  region?: string;
+  employment_status?: string;
+  income_level?: string;
+  household_type?: string;
+  [key: string]: any;
+}
+
 const router = useRouter();
 const messages = ref<Message[]>([
   {
@@ -34,7 +44,21 @@ const userInput = ref('');
 const isTyping = ref(false);
 const quickReplies = ref(['나에게 맞는 지원금 찾기', '청년 월세 지원', '실업 급여']);
 
+// UUID 생성 함수
+const generateUUID = () => {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+};
+
+// 대화 세션 관리 (페이지 로드 시 UUID 생성)
+const sessionId = ref<string>(generateUUID());
+const userProfile = ref<UserProfile>({});
+
 const messagesContainer = ref<HTMLElement | null>(null);
+const chatInputRef = ref<{ focus: () => void } | null>(null);
 
 const scrollToBottom = async () => {
   await nextTick();
@@ -60,26 +84,22 @@ const sendMessage = async (text: string) => {
   isTyping.value = true;
   await scrollToBottom();
 
-  // 스트리밍 응답을 위한 assistant 메시지 미리 추가
   const assistantMsgId = (Date.now() + 1).toString();
-  messages.value.push({
-    id: assistantMsgId,
-    role: 'assistant',
-    text: '',
-  });
-
   let policies: PolicySource[] = [];
 
   try {
-    const response = await fetch('http://localhost:8000/chat/stream', {
+    // 새로운 conversation/stream 엔드포인트 사용
+    const requestBody = {
+      message: text,
+      session_id: sessionId.value,
+    };
+
+    const response = await fetch('http://localhost:8000/chat/conversation/stream', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        query: text,
-        top_k: 5,
-      }),
+      body: JSON.stringify(requestBody),
     });
 
     if (!response.ok) {
@@ -93,9 +113,9 @@ const sendMessage = async (text: string) => {
       throw new Error('No reader available');
     }
 
-    isTyping.value = false;
     let buffer = '';
     let currentEvent = '';
+    let firstTextReceived = false;
 
     while (true) {
       const { done, value } = await reader.read();
@@ -120,13 +140,44 @@ const sendMessage = async (text: string) => {
           const data = trimmedLine.slice(5).trim();
 
           try {
-            if (currentEvent === 'sources') {
+            if (currentEvent === 'message') {
+              // message 이벤트: AI 응답 메시지 (스트리밍)
+              const parsed = JSON.parse(data);
+              if (parsed.text !== undefined) {
+                if (!firstTextReceived) {
+                  firstTextReceived = true;
+                  isTyping.value = false;
+                  messages.value.push({
+                    id: assistantMsgId,
+                    role: 'assistant',
+                    text: '',
+                  });
+                }
+                const assistantMsg = messages.value.find(m => m.id === assistantMsgId);
+                if (assistantMsg) {
+                  assistantMsg.text += parsed.text;
+                }
+              }
+            } else if (currentEvent === 'profile') {
+              // profile 이벤트: 수집된 사용자 정보
+              const parsed = JSON.parse(data);
+              userProfile.value = { ...userProfile.value, ...parsed };
+            } else if (currentEvent === 'sources') {
               // sources 이벤트: 정책 배열
               policies = JSON.parse(data);
             } else if (currentEvent === 'answer') {
-              // answer 이벤트: {"text": "..."} 형태
+              // answer 이벤트: RAG 답변 스트리밍
               const parsed = JSON.parse(data);
               if (parsed.text !== undefined) {
+                if (!firstTextReceived) {
+                  firstTextReceived = true;
+                  isTyping.value = false;
+                  messages.value.push({
+                    id: assistantMsgId,
+                    role: 'assistant',
+                    text: '',
+                  });
+                }
                 const assistantMsg = messages.value.find(m => m.id === assistantMsgId);
                 if (assistantMsg) {
                   assistantMsg.text += parsed.text;
@@ -144,9 +195,12 @@ const sendMessage = async (text: string) => {
       await scrollToBottom();
     }
 
+    // 스트리밍 완료 후 타이핑 인디케이터 숨기기
+    isTyping.value = false;
+
     // 정책이 있으면 store에 저장하고 액션 버튼 추가
     if (policies.length > 0) {
-      setPolicyData(policies, {});
+      setPolicyData(policies, userProfile.value);
 
       messages.value.push({
         id: (Date.now() + 2).toString(),
@@ -160,14 +214,24 @@ const sendMessage = async (text: string) => {
 
   } catch (e) {
     isTyping.value = false;
-    // 빈 메시지였으면 에러 메시지로 교체
+    // 에러 메시지 추가
     const assistantMsg = messages.value.find(m => m.id === assistantMsgId);
     if (assistantMsg && !assistantMsg.text) {
       assistantMsg.text = '죄송합니다. 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+    } else if (!assistantMsg) {
+      messages.value.push({
+        id: assistantMsgId,
+        role: 'assistant',
+        text: '죄송합니다. 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
+      });
     }
   }
 
   await scrollToBottom();
+
+  // 응답 완료 후 입력창에 포커스
+  await nextTick();
+  chatInputRef.value?.focus();
 };
 
 const handleQuickReply = (option: string) => {
@@ -221,6 +285,7 @@ const goBack = () => {
         
         <!-- Input -->
         <ChatInput
+          ref="chatInputRef"
           v-model="userInput"
           :disabled="isTyping"
           @submit="() => sendMessage(userInput)"

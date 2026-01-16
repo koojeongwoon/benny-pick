@@ -1,5 +1,6 @@
 <script setup lang="ts">
 defineProps<{
+  id: string;
   title: string;
   amount: string;
   description: string;
@@ -7,10 +8,15 @@ defineProps<{
   icon?: string;
   link?: string;
 }>();
+
+const emit = defineEmits(['click']);
 </script>
 
 <template>
-  <div class="relative flex flex-col flex-shrink-0 w-[280px] p-6 bg-white border border-gray-100 shadow-card rounded-3xl snap-center">
+  <div
+    class="relative flex flex-col flex-shrink-0 w-[280px] p-6 bg-white border border-gray-100 shadow-card rounded-3xl snap-center cursor-pointer hover:shadow-lg hover:border-primary/20 transition-all"
+    @click="emit('click', id)"
+  >
     <!-- Icon & Tags -->
     <div class="flex items-start justify-between mb-4">
       <div class="flex items-center justify-center w-12 h-12 text-2xl bg-gray-50 rounded-2xl">

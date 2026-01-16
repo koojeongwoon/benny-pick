@@ -25,6 +25,11 @@ const handleSubmit = () => {
 onMounted(() => {
   inputRef.value?.focus();
 });
+
+// 외부에서 focus 호출 가능하도록 expose
+defineExpose({
+  focus: () => inputRef.value?.focus(),
+});
 </script>
 
 <template>

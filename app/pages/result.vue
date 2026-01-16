@@ -26,6 +26,10 @@ const restart = () => {
 const goBack = () => {
   router.back();
 };
+
+const goToPolicy = (id: string) => {
+  router.push(`/policy/${id}`);
+};
 </script>
 
 <template>
@@ -59,11 +63,13 @@ const goBack = () => {
         <ResultCard
           v-for="policy in policies"
           :key="policy.id"
+          :id="policy.id"
           :title="policy.title"
           :description="policy.description"
           :amount="policy.benefit_summary"
-          :tags="[policy.category, policy.region]"
+          :tags="[policy.category, policy.region].filter(Boolean)"
           :link="policy.apply_url"
+          @click="goToPolicy"
         />
       </ResultCarousel>
     </section>
