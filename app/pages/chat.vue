@@ -44,17 +44,8 @@ const userInput = ref('');
 const isTyping = ref(false);
 const quickReplies = ref(['나에게 맞는 지원금 찾기', '청년 월세 지원', '실업 급여']);
 
-// UUID 생성 함수
-const generateUUID = () => {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-    const r = Math.random() * 16 | 0;
-    const v = c === 'x' ? r : (r & 0x3 | 0x8);
-    return v.toString(16);
-  });
-};
-
-// 대화 세션 관리 (페이지 로드 시 UUID 생성)
-const sessionId = ref<string>(generateUUID());
+// 대화 세션 관리 (백엔드에서 생성된 ID 사용)
+const sessionId = ref<string | null>(null);
 const userProfile = ref<UserProfile>({});
 
 const messagesContainer = ref<HTMLElement | null>(null);
@@ -89,15 +80,20 @@ const sendMessage = async (text: string) => {
 
   try {
     // 새로운 conversation/stream 엔드포인트 사용
-    const requestBody = {
+    const requestBody: { message: string; session_id?: string } = {
       message: text,
-      session_id: sessionId.value,
     };
+    // session_id가 있으면 포함 (첫 요청 시에는 없음)
+    if (sessionId.value) {
+      requestBody.session_id = sessionId.value;
+    }
 
-    const response = await fetch('http://localhost:8000/chat/conversation/stream', {
+    const token = localStorage.getItem('access_token');
+    const response = await fetch('/api/chat/conversation/stream', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        ...(token && { Authorization: `Bearer ${token}` }),
       },
       body: JSON.stringify(requestBody),
     });
@@ -140,7 +136,13 @@ const sendMessage = async (text: string) => {
           const data = trimmedLine.slice(5).trim();
 
           try {
-            if (currentEvent === 'message') {
+            if (currentEvent === 'session') {
+              // session 이벤트: 백엔드에서 생성된 세션 ID 저장
+              const parsed = JSON.parse(data);
+              if (parsed.session_id) {
+                sessionId.value = parsed.session_id;
+              }
+            } else if (currentEvent === 'message') {
               // message 이벤트: AI 응답 메시지 (스트리밍)
               const parsed = JSON.parse(data);
               if (parsed.text !== undefined) {

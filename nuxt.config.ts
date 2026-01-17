@@ -1,3 +1,5 @@
+import { fileURLToPath } from "url";
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: "2025-07-15",
@@ -6,11 +8,18 @@ export default defineNuxtConfig({
 
   css: ["~/assets/css/main.css"],
 
-  // 👇 [추가됨] Cloudflare Pages 배포를 위한 핵심 설정입니다.
-  // 로컬 개발 시에는 주석 처리, 배포 시 활성화
-  // nitro: {
-  //   preset: "cloudflare-pages",
-  // },
+  // 로컬 개발: 백엔드 API(localhost:8000)로 프록시
+  // /api/chat/... → http://localhost:8000/chat/...
+  nitro: {
+    // preset: "cloudflare-pages",
+    devProxy: {
+      "/api": {
+        target: "http://localhost:8000",
+        changeOrigin: true,
+        rewrite: (path: string) => path.replace(/^\/api/, ""),
+      },
+    },
+  },
 
   runtimeConfig: {
     // ⚠️ 수정 제안: import.meta.env 대신 process.env를 쓰거나 빈 값으로 두는 게 안전합니다.

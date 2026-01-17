@@ -35,16 +35,19 @@ const startChat = () => {
       </div>
 
       <!-- CTA Section -->
-      <div class="w-full mt-12 mb-8 animate-fade-in-up delay-100">
-        <ButtonPrimary 
-          label="내 숨은 돈 조회하기" 
-          block 
+      <div class="w-full mt-12 mb-8 space-y-4 animate-fade-in-up delay-100">
+        <ButtonPrimary
+          label="내 숨은 돈 조회하기"
+          block
           @click="startChat"
           class="text-xl"
         />
-        <p class="mt-4 text-xs text-gray-400">
-          * 별도의 회원가입 없이 바로 조회가 가능해요
-        </p>
+        <button
+          @click="router.push('/register')"
+          class="w-full py-3 text-base font-medium text-gray-600 transition-colors bg-white border border-gray-200 rounded-xl hover:bg-gray-50 hover:border-gray-300"
+        >
+          회원가입하고 더 많은 혜택 받기
+        </button>
       </div>
 
     </main>
