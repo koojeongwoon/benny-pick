@@ -8,6 +8,7 @@ export default defineNuxtConfig({
 
   css: ["~/assets/css/main.css"],
 
+<<<<<<< Updated upstream
   // 로컬 개발: 백엔드 API(localhost:8000)로 프록시
   // /api/chat/... → http://localhost:8000/chat/...
   nitro: {
@@ -21,6 +22,8 @@ export default defineNuxtConfig({
     },
   },
 
+=======
+>>>>>>> Stashed changes
   runtimeConfig: {
     // ⚠️ 수정 제안: import.meta.env 대신 process.env를 쓰거나 빈 값으로 두는 게 안전합니다.
     // 실제 값은 .dev.vars 파일(로컬)이나 Cloudflare 대시보드(배포)에서 주입됩니다.
