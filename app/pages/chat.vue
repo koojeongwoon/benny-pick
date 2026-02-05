@@ -48,6 +48,21 @@ const quickReplies = ref(['나에게 맞는 지원금 찾기', '청년 월세 �
 const sessionId = ref<string | null>(null);
 const userProfile = ref<UserProfile>({});
 
+const route = useRoute();
+
+onMounted(async () => {
+  const policyId = route.query.policy_id as string;
+  if (policyId) {
+    // 정책 ID가 있으면 바로 해당 정책에 대해 상담 요청
+    // 사용자 입장에서 자연스럽게 보이도록 메시지 추가 없이 바로 호출하거나,
+    // 또는 "이 정책에 대해 알려줘" 같은 메시지를 자동으로 보낼 수 있음.
+    // 여기서는 API 스펙에 따라 백엔드에 알려주는 방식이 이상적이나,
+    // 현재 sendMessage 구현상 텍스트가 필요함.
+    // 사용자 경험을 위해:
+    await sendMessage(`이 정책에 대해 자세히 알려줘: ${policyId}`);
+  }
+});
+
 const messagesContainer = ref<HTMLElement | null>(null);
 const chatInputRef = ref<{ focus: () => void } | null>(null);
 
@@ -261,7 +276,7 @@ const goBack = () => {
 
     <!-- Messages Area -->
     <main ref="messagesContainer" class="flex-1 px-4 py-6 overflow-y-auto scroll-smooth">
-      <div class="flex flex-col max-w-2xl mx-auto">
+      <div class="flex flex-col max-w-4xl mx-auto">
         <ChatBubble
           v-for="msg in messages"
           :key="msg.id"
@@ -277,7 +292,7 @@ const goBack = () => {
 
     <!-- Bottom Area (Quick Replies + Input) -->
     <div class="flex-shrink-0 bg-white border-t border-gray-100">
-      <div class="max-w-2xl px-4 py-3 mx-auto space-y-3">
+      <div class="max-w-4xl px-4 py-3 mx-auto space-y-3">
         <!-- Quick Replies -->
         <ChatQuickReplies
           v-if="!isTyping && quickReplies.length > 0"

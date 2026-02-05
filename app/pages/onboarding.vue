@@ -89,7 +89,6 @@ const sendMessage = async (message: string) => {
     // 인증 오류 시 로그인 페이지로
     if (error.statusCode === 401) {
       localStorage.removeItem('access_token');
-      localStorage.removeItem('refresh_token');
       router.push('/login');
       return;
     }
@@ -210,7 +209,7 @@ const skipOnboarding = async () => {
   <div class="flex flex-col min-h-[100dvh] bg-gray-100">
     <!-- Header -->
     <header class="sticky top-0 z-10 bg-white border-b border-gray-200">
-      <div class="flex items-center justify-between max-w-md px-4 py-3 mx-auto">
+      <div class="flex items-center justify-between max-w-4xl px-4 py-3 mx-auto">
         <div class="w-10"></div>
         <h1 class="text-lg font-semibold text-gray-900">맞춤 설정</h1>
         <button
@@ -226,7 +225,7 @@ const skipOnboarding = async () => {
 
     <!-- Chat Messages -->
     <main ref="chatContainer" class="flex-1 overflow-y-auto">
-      <div class="max-w-md px-4 py-6 mx-auto space-y-4">
+      <div class="max-w-4xl px-4 py-6 mx-auto space-y-4">
         <div
           v-for="(msg, index) in messages"
           :key="index"
@@ -237,7 +236,7 @@ const skipOnboarding = async () => {
         >
           <div
             :class="[
-              'max-w-[80%] px-4 py-3 rounded-2xl whitespace-pre-line',
+              'max-w-[70%] px-4 py-3 rounded-2xl whitespace-pre-line',
               msg.role === 'user'
                 ? 'bg-primary text-white rounded-br-md'
                 : 'bg-white text-gray-800 rounded-bl-md shadow-sm'
@@ -263,6 +262,7 @@ const skipOnboarding = async () => {
           <button
             @click="goToChat"
             class="px-8 py-3 text-lg font-semibold text-white transition-colors rounded-xl bg-primary hover:bg-primary/90"
+            style="view-transition-name: start-chat-btn"
           >
             시작하기
           </button>
@@ -272,7 +272,7 @@ const skipOnboarding = async () => {
 
     <!-- Quick Replies -->
     <div v-if="quickReplies.length > 0 && !isLoading" class="bg-white border-t border-gray-100">
-      <div class="max-w-md px-4 py-3 mx-auto">
+      <div class="max-w-4xl px-4 py-3 mx-auto">
         <div class="flex flex-wrap gap-2">
           <button
             v-for="reply in quickReplies"
@@ -288,7 +288,7 @@ const skipOnboarding = async () => {
 
     <!-- Input Area -->
     <footer v-if="!isCompleted" class="sticky bottom-0 bg-white border-t border-gray-200">
-      <div class="max-w-md px-4 py-3 mx-auto">
+      <div class="max-w-4xl px-4 py-3 mx-auto">
         <form @submit.prevent="handleSubmit" class="flex gap-3">
           <input
             v-model="userInput"

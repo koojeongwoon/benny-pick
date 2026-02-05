@@ -10,7 +10,6 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
-    "@google/genai": "^1.30.0",
     "marked": "^17.0.1",
     "nuxt": "^4.2.1",
     "sharp": "^0.34.5",
@@ -23,6 +22,7 @@
     "@tailwindcss/container-queries": "^0.1.1",
     "@tailwindcss/forms": "^0.5.10",
     "@tailwindcss/typography": "^0.5.19",
+    "@types/better-sqlite3": "^7.6.13",
     "happy-dom": "^20.0.11",
     "playwright": "^1.57.0",
     "vitest": "^3.2.4"

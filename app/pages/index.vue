@@ -9,7 +9,7 @@ const startChat = () => {
 <template>
   <div class="flex flex-col min-h-[100dvh] bg-gray-100">
     <!-- Main Content -->
-    <main class="flex flex-col items-center justify-center flex-1 w-full max-w-md px-6 mx-auto text-center">
+    <main class="flex flex-col items-center justify-center flex-1 w-full max-w-5xl px-6 mx-auto text-center">
       
       <!-- Hero Section -->
       <div class="flex flex-col items-center space-y-8 animate-fade-in-up">
@@ -23,11 +23,11 @@ const startChat = () => {
 
         <!-- Text Content -->
         <div class="space-y-3">
-          <h1 class="text-3xl font-bold leading-tight text-gray-900 whitespace-pre-line">
+          <h1 class="text-3xl lg:text-5xl font-bold leading-tight text-gray-900 whitespace-pre-line">
             놓치고 있는 정부 지원금,
             <span class="text-primary">지금 바로 찾아보세요</span>
           </h1>
-          <p class="text-lg font-medium text-gray-600 whitespace-pre-line">
+          <p class="text-lg lg:text-xl font-medium text-gray-600 whitespace-pre-line">
             Benny Pick이 당신에게 딱 맞는
             혜택을 찾아드립니다.
           </p>
@@ -35,11 +35,12 @@ const startChat = () => {
       </div>
 
       <!-- CTA Section -->
-      <div class="w-full mt-12 mb-8 space-y-4 animate-fade-in-up delay-100">
+      <div class="w-full max-w-md mt-12 mb-8 space-y-4 animate-fade-in-up delay-100">
+
         <ButtonPrimary
-          label="내 숨은 돈 조회하기"
+          label="로그인하고 혜택 받기"
           block
-          @click="startChat"
+          @click="router.push('/login')"
           class="text-xl"
         />
         <button

@@ -3,7 +3,6 @@ const router = useRouter();
 
 interface TokenResponse {
   access_token: string;
-  refresh_token: string;
   token_type: string;
   expires_in: number;
   user: {
@@ -104,7 +103,6 @@ const handleSubmit = async () => {
 
     // 토큰 저장
     localStorage.setItem('access_token', response.access_token);
-    localStorage.setItem('refresh_token', response.refresh_token);
     localStorage.setItem('user', JSON.stringify(response.user));
 
     // 온보딩 페이지로 이동
@@ -129,7 +127,7 @@ const handleSubmit = async () => {
   <div class="flex flex-col min-h-[100dvh] bg-gray-100">
     <!-- Header -->
     <header class="sticky top-0 z-10 bg-white border-b border-gray-200">
-      <div class="flex items-center justify-between max-w-md px-4 py-3 mx-auto">
+      <div class="flex items-center justify-between max-w-5xl px-4 py-3 mx-auto">
         <button @click="router.push('/')" class="p-2 -ml-2 text-gray-600 hover:text-gray-900">
           <span class="text-2xl material-symbols-outlined">arrow_back</span>
         </button>
@@ -140,7 +138,7 @@ const handleSubmit = async () => {
 
     <!-- Form -->
     <main class="flex-1 overflow-y-auto">
-      <div class="max-w-md px-6 py-8 mx-auto">
+      <div class="max-w-md px-6 py-8 mx-auto mt-10 bg-white shadow-xl rounded-2xl">
         <!-- Welcome Text -->
         <div class="mb-8 text-center">
           <div class="mb-4 text-5xl">👋</div>

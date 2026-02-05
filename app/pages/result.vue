@@ -48,7 +48,7 @@ const goToPolicy = (id: string) => {
       <h2 class="text-xl font-bold text-gray-800">
         <span class="text-primary">{{ policies.length }}건</span>의 숨은 지원금을<br>찾았어요!
       </h2>
-      <div class="mt-6 p-6 bg-white rounded-3xl shadow-toss w-full max-w-sm">
+      <div class="mt-6 p-6 bg-white rounded-3xl shadow-toss w-full max-w-md">
         <p class="text-sm text-gray-500 mb-1">예상 수령액</p>
         <p class="text-3xl font-bold text-gray-900">{{ totalAmount }}</p>
       </div>

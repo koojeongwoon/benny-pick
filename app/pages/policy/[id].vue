@@ -28,7 +28,7 @@ const policyId = route.params.id as string;
 
 // 백엔드에서 상세 정보 가져오기
 const { data: policy, pending, error } = await useFetch<PolicyDetail>(
-  `http://localhost:8000/welfare/policies/${policyId}`
+  `/api/welfare/policies/${policyId}`
 );
 
 const goBack = () => {
@@ -79,7 +79,7 @@ const sourceLabel = computed(() => {
 
     <!-- 콘텐츠 -->
     <main v-else class="flex-1 px-4 py-6 pb-24">
-      <article class="max-w-2xl mx-auto bg-white rounded-3xl shadow-card overflow-hidden">
+      <article class="max-w-4xl mx-auto bg-white rounded-3xl shadow-card overflow-hidden">
         <!-- 헤더 영역 -->
         <div class="p-6 border-b border-gray-100">
           <div class="flex flex-wrap gap-2 mb-3">
@@ -170,7 +170,7 @@ const sourceLabel = computed(() => {
 
     <!-- 하단 신청 버튼 -->
     <div v-if="policy?.website" class="fixed bottom-0 left-0 right-0 px-4 py-4 bg-white border-t border-gray-100 shadow-lg">
-      <div class="max-w-2xl mx-auto">
+      <div class="max-w-4xl mx-auto">
         <a
           :href="policy.website"
           target="_blank"
